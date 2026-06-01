@@ -9,7 +9,7 @@ from scraper_about import AboutScraper
 from scraper_jobs import JobsScraper
 
 
-def save_to_excel(all_posts, all_people, all_about, all_jobs):
+def save_to_excel(all_posts, all_people, all_members, all_about, all_jobs):
     print("\n💾 Saving to Excel...")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename  = f"linkedin_data_{timestamp}.xlsx"
@@ -32,10 +32,11 @@ def save_to_excel(all_posts, all_people, all_about, all_jobs):
         print(f"✅ Sheet '{sheet_name}': {len(data)} rows")
 
     with pd.ExcelWriter(filename, engine="openpyxl") as writer:
-        write_sheet(writer, all_posts,  "Posts",  max_width=80)
-        write_sheet(writer, all_people, "People", max_width=60)
-        write_sheet(writer, all_about,  "About",  max_width=80)
-        write_sheet(writer, all_jobs,   "Jobs",   max_width=80)
+        write_sheet(writer, all_posts,    "Posts",          max_width=80)
+        write_sheet(writer, all_people,   "People",         max_width=60)
+        write_sheet(writer, all_members,  "People_Members", max_width=80)
+        write_sheet(writer, all_about,    "About",          max_width=80)
+        write_sheet(writer, all_jobs,     "Jobs",           max_width=80)
 
     print(f"\n📁 Saved: {filename}")
 
@@ -49,10 +50,11 @@ def main():
     about_scraper  = AboutScraper(browser)
     jobs_scraper   = JobsScraper(browser)
 
-    all_posts  = []
-    all_people = []
-    all_about  = []
-    all_jobs   = []
+    all_posts   = []
+    all_people  = []
+    all_members = []
+    all_about   = []
+    all_jobs    = []
 
     try:
         browser.login(EMAIL, PASSWORD)
@@ -61,12 +63,17 @@ def main():
             slug = co["slug"]
             name = co["display"]
 
-            all_about  += about_scraper.scrape(slug, name)
-            all_posts  += posts_scraper.scrape(slug, name)
-            all_people += people_scraper.scrape(slug, name)
-            all_jobs   += jobs_scraper.scrape(slug, name)
+            all_about += about_scraper.scrape(slug, name)
+            all_posts += posts_scraper.scrape(slug, name)
 
-        save_to_excel(all_posts, all_people, all_about, all_jobs)
+            # ── scrape() returns a TUPLE: (stats_rows, member_rows) ──
+            stats_rows, member_rows = people_scraper.scrape(slug, name)
+            all_people  += stats_rows
+            all_members += member_rows
+
+            all_jobs += jobs_scraper.scrape(slug, name)
+
+        save_to_excel(all_posts, all_people, all_members, all_about, all_jobs)
 
     finally:
         browser.stop()

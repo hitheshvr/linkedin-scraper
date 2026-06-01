@@ -21,7 +21,6 @@ class AboutScraper:
         self.browser.goto(f"https://www.linkedin.com/company/{slug}/about/")
         time.sleep(3)
 
-        # Scroll to load all content
         for _ in range(3):
             self.page.mouse.wheel(0, 800)
             time.sleep(1)
@@ -58,13 +57,29 @@ class AboutScraper:
             except:
                 pass
 
-            # Industry, company size, headquarters, founded, specialties
-            industry      = extract(r"Industry\s*\n(.+?)(?:\n|$)")
-            company_size  = extract(r"Company size\s*\n(.+?)(?:\n|$)")
+            # Industry, company size
+            industry     = extract(r"Industry\s*\n(.+?)(?:\n|$)")
+            company_size = extract(r"Company size\s*\n(.+?)(?:\n|$)")
             assoc_members = extract(r"([\d,]+)\s+associated members")
-            headquarters  = extract(r"Headquarters\s*\n(.+?)(?:\n|$)")
-            founded       = extract(r"Founded\s*\n(.+?)(?:\n|$)")
-            specialties   = extract(r"Specialties\s*\n(.+?)(?:\n|$)")
+
+            # ── FIXED: headquarters, founded, specialties ──
+            headquarters = "N/A"
+            m_hq = re.search(r"Headquarters\s*[\n\r\s]+([^\n]+)", body_text, re.I)
+            if m_hq:
+                headquarters = m_hq.group(1).strip()
+
+            founded = "N/A"
+            m_founded = re.search(r"Founded\s*[\n\r\s]*(\d{4})", body_text, re.I)
+            if m_founded:
+                founded = m_founded.group(1).strip()
+
+            specialties = "N/A"
+            m_spec = re.search(
+                r"Specialties\s*[\n\r\s]+([^\n]+(?:\n[^\n]+)*?)(?:\n\n|\Z)",
+                body_text, re.I
+            )
+            if m_spec:
+                specialties = re.sub(r"\s+", " ", m_spec.group(1)).strip()
 
             # Followers
             followers = "N/A"
@@ -72,7 +87,7 @@ class AboutScraper:
             if m:
                 followers = m.group(1)
 
-            # Locations — scrape all listed addresses
+            # Locations
             locations = []
             try:
                 loc_items = self.page.locator(
@@ -87,7 +102,6 @@ class AboutScraper:
             except:
                 pass
 
-            # Fallback: extract addresses from body text
             if not locations:
                 for m in re.finditer(
                     r"(?:Headquarters|Primary|Secondary|Location)\s*\n(.+?)(?:\nGet directions|$)",
@@ -98,18 +112,18 @@ class AboutScraper:
                         locations.append(loc)
 
             rows.append({
-                "Company":          name,
-                "Overview":         overview,
-                "Website":          website,
-                "Industry":         industry,
-                "Company_Size":     company_size,
+                "Company":            name,
+                "Overview":           overview,
+                "Website":            website,
+                "Industry":           industry,
+                "Company_Size":       company_size,
                 "Associated_Members": assoc_members,
-                "Followers":        followers,
-                "Headquarters":     headquarters,
-                "Founded":          founded,
-                "Specialties":      specialties,
-                "Locations":        " | ".join(locations) if locations else "N/A",
-                "Scraped_At":       scraped_at,
+                "Followers":          followers,
+                "Headquarters":       headquarters,
+                "Founded":            founded,
+                "Specialties":        specialties,
+                "Locations":          " | ".join(locations) if locations else "N/A",
+                "Scraped_At":         scraped_at,
             })
 
             print(f"  ✅ About scraped: {name} | {industry} | {headquarters}")
@@ -117,18 +131,18 @@ class AboutScraper:
         except Exception as e:
             print(f"  ❌ About failed for {name}: {e}")
             rows.append({
-                "Company":          name,
-                "Overview":         "N/A",
-                "Website":          "N/A",
-                "Industry":         "N/A",
-                "Company_Size":     "N/A",
+                "Company":            name,
+                "Overview":           "N/A",
+                "Website":            "N/A",
+                "Industry":           "N/A",
+                "Company_Size":       "N/A",
                 "Associated_Members": "N/A",
-                "Followers":        "N/A",
-                "Headquarters":     "N/A",
-                "Founded":          "N/A",
-                "Specialties":      "N/A",
-                "Locations":        "N/A",
-                "Scraped_At":       scraped_at,
+                "Followers":          "N/A",
+                "Headquarters":       "N/A",
+                "Founded":            "N/A",
+                "Specialties":        "N/A",
+                "Locations":          "N/A",
+                "Scraped_At":         scraped_at,
             })
 
         return rows

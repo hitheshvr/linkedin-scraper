@@ -1,6 +1,15 @@
-2026/06/01-00:57:38.369 3c60 Reusing MANIFEST C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Local Storage\leveldb/MANIFEST-000001
-2026/06/01-00:57:38.377 3c60 Recovering log #10
-2026/06/01-00:57:38.381 3c60 Reusing old log C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Local Storage\leveldb/000010.log 
-2026/06/01-01:03:03.516 9fec Level-0 table #14: started
-2026/06/01-01:03:03.529 9fec Level-0 table #14: 37705 bytes OK
-2026/06/01-01:03:03.535 9fec Delete type=0 #10
+2026/06/01-11:03:05.314 90a0 Reusing MANIFEST C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Local Storage\leveldb/MANIFEST-000001
+2026/06/01-11:03:05.322 90a0 Recovering log #16
+2026/06/01-11:03:05.325 90a0 Reusing old log C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Local Storage\leveldb/000016.log 
+2026/06/01-11:41:14.222 9d50 Level-0 table #20: started
+2026/06/01-11:41:14.256 9d50 Level-0 table #20: 32124 bytes OK
+2026/06/01-11:41:14.263 9d50 Delete type=0 #16
+2026/06/01-11:41:14.269 9d50 Compacting 4@0 + 1@1 files
+2026/06/01-11:41:14.314 9d50 Generated table #21@0: 443 keys, 12282 bytes
+2026/06/01-11:41:14.314 9d50 Compacted 4@0 + 1@1 files => 12282 bytes
+2026/06/01-11:41:14.316 9d50 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/06/01-11:41:14.319 9d50 Delete type=2 #8
+2026/06/01-11:41:14.319 9d50 Delete type=2 #11
+2026/06/01-11:41:14.320 9d50 Delete type=2 #14
+2026/06/01-11:41:14.320 9d50 Delete type=2 #17
+2026/06/01-11:41:14.320 9d50 Delete type=2 #20

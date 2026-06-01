@@ -247,7 +247,200 @@ class PeopleScraper:
                 pass
         return found_cards
 
-    def scrape(self, slug, name) -> list:
+    # ── FIXED: scrapes ALL members, not just first card ──────────────
+    def _scrape_member_cards(self, name) -> list:
+        rows       = []
+        scraped_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        seen_links = set()
+        seen_names = set()
+
+        print(f"  👤 Scraping member cards for {name}...")
+
+        # Scroll down past the carousel to load member cards
+        # More scrolls needed to get past the stats carousel
+        for _ in range(8):
+            self.page.mouse.wheel(0, 600)
+            time.sleep(1.2)
+
+        # ── Try ALL known selectors and collect from ALL of them ──
+        # LinkedIn uses different class names for the employee grid
+        all_member_selectors = [
+            # Most common — the profile card wrapper
+            "div.org-people-profile-card__card-spacing",
+            # Alternate class names LinkedIn uses
+            "div[class*='org-people-profile-card__card-spacing']",
+            "li[class*='org-people-profiles-module__profile-list-item']",
+            # Entity lockup (used in newer LinkedIn layouts)
+            "div.artdeco-entity-lockup__content",
+            # Generic people card containers
+            "div[class*='org-people__emphasis-card']",
+            "div[class*='member-card']",
+        ]
+
+        member_cards = []
+        for sel in all_member_selectors:
+            try:
+                cards = self.page.locator(sel).all()
+                if len(cards) > len(member_cards):
+                    member_cards = cards
+                    print(f"    Selector '{sel}' found {len(cards)} cards")
+            except:
+                pass
+
+        # If still nothing, try getting all links with /in/ and
+        # building member data directly from anchor tags
+        if not member_cards:
+            print("    ⚠️  No card containers found — falling back to link scan")
+            try:
+                anchors = self.page.locator("a[href*='/in/']").all()
+                print(f"    Found {len(anchors)} profile links via anchor scan")
+                for a in anchors:
+                    try:
+                        href = a.get_attribute("href") or ""
+                        if "/in/" not in href:
+                            continue
+                        profile_link = href.split("?")[0]
+                        if profile_link in seen_links:
+                            continue
+
+                        # Skip LinkedIn's own nav/sidebar links
+                        if any(x in profile_link for x in [
+                            "/in/undefined", "linkedin.com/in/sign",
+                        ]):
+                            continue
+
+                        seen_links.add(profile_link)
+
+                        # Try to get name and tagline from surrounding elements
+                        member_name = "N/A"
+                        tagline     = "N/A"
+                        try:
+                            txt = a.inner_text(timeout=1000).strip()
+                            if txt and len(txt) > 1 and txt.lower() not in JUNK:
+                                member_name = txt
+                        except:
+                            pass
+
+                        if member_name != "N/A":
+                            rows.append({
+                                "Company":      name,
+                                "Member_Name":  member_name,
+                                "Profile_Link": profile_link,
+                                "One_Liner":    tagline,
+                                "Scraped_At":   scraped_at,
+                            })
+                    except:
+                        pass
+            except:
+                pass
+            return rows
+
+        print(f"    Total member cards to process: {len(member_cards)}")
+
+        for i, card in enumerate(member_cards):
+            try:
+                # Scroll into view to trigger lazy loading
+                try:
+                    card.scroll_into_view_if_needed(timeout=2000)
+                    time.sleep(0.4)
+                except:
+                    pass
+
+                # ── Name: try multiple selectors ──
+                member_name = "N/A"
+                name_selectors = [
+                    "div.artdeco-entity-lockup__title",
+                    "span[class*='entity-result__title-text']",
+                    "div[class*='lockup__title']",
+                    "span.org-people-profile-card__profile-title",
+                    "div[class*='profile-card__name']",
+                    # Text inside the profile link itself
+                    "a[href*='/in/'] span[aria-hidden='true']",
+                    "a[href*='/in/']",
+                ]
+                for sel in name_selectors:
+                    try:
+                        els = card.locator(sel).all()
+                        for el in els:
+                            txt = el.inner_text(timeout=800).strip()
+                            # Filter out junk and connection degree badges
+                            if (txt
+                                    and len(txt) > 1
+                                    and txt.lower() not in JUNK
+                                    and not re.match(r"^\d+(st|nd|rd|th)$", txt)
+                                    and txt not in ("·", "--", "Connect", "Follow",
+                                                    "Message", "LinkedIn Member")):
+                                member_name = txt
+                                break
+                        if member_name != "N/A":
+                            break
+                    except:
+                        pass
+
+                # ── Profile link ──
+                profile_link = "N/A"
+                try:
+                    for a in card.locator("a").all():
+                        href = a.get_attribute("href") or ""
+                        if "/in/" in href:
+                            profile_link = href.split("?")[0]
+                            break
+                except:
+                    pass
+
+                # Skip duplicates
+                if profile_link != "N/A" and profile_link in seen_links:
+                    continue
+                if member_name != "N/A" and member_name in seen_names:
+                    continue
+                if profile_link != "N/A":
+                    seen_links.add(profile_link)
+                if member_name != "N/A":
+                    seen_names.add(member_name)
+
+                # ── One-liner / tagline ──
+                tagline = "N/A"
+                tagline_selectors = [
+                    "div.artdeco-entity-lockup__subtitle",
+                    "div[class*='lockup__subtitle']",
+                    "div.org-people-profile-card__profile-info",
+                    "span[class*='entity-result__primary-subtitle']",
+                    "div[class*='profile-card__subtitle']",
+                    "div[class*='profile-card__occupation']",
+                ]
+                for sel in tagline_selectors:
+                    try:
+                        els = card.locator(sel).all()
+                        for el in els:
+                            txt = el.inner_text(timeout=800).strip()
+                            if (txt
+                                    and txt.lower() not in JUNK
+                                    and txt not in ("--", "·")):
+                                tagline = txt
+                                break
+                        if tagline != "N/A":
+                            break
+                    except:
+                        pass
+
+                # Only save if we got something useful
+                if member_name != "N/A" or profile_link != "N/A":
+                    rows.append({
+                        "Company":      name,
+                        "Member_Name":  member_name,
+                        "Profile_Link": profile_link,
+                        "One_Liner":    tagline,
+                        "Scraped_At":   scraped_at,
+                    })
+                    print(f"    ✅ {i+1}: {member_name} | {tagline[:55]}")
+
+            except Exception as e:
+                print(f"    ❌ Card {i+1}: {e}")
+
+        print(f"  ✅ Total members scraped for {name}: {len(rows)}")
+        return rows
+
+    def scrape(self, slug, name):
         print(f"\n👥 People: {name}")
         self.browser.goto(f"https://www.linkedin.com/company/{slug}/people/")
         time.sleep(5)
@@ -323,10 +516,11 @@ class PeopleScraper:
                 print("    🛑 No more slides")
                 break
 
-        rows = []
+        # Stats rows
+        stats_rows = []
         for category in VALID_CATEGORIES:
             for rank, e in enumerate(all_collected.get(category, []), start=1):
-                rows.append({
+                stats_rows.append({
                     "Company":       name,
                     "Total_Members": total,
                     "Category":      category,
@@ -336,6 +530,11 @@ class PeopleScraper:
                     "Scraped_At":    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 })
 
-        print(f"  ✅ People rows added: {len(rows)}")
+        print(f"  ✅ People stats rows: {len(stats_rows)}")
         print(f"  📋 Categories: {list(all_collected.keys())}")
-        return rows
+
+        # Member card rows — page is already on /people/ URL
+        member_rows = self._scrape_member_cards(name)
+        print(f"  ✅ Member rows: {len(member_rows)}")
+
+        return stats_rows, member_rows

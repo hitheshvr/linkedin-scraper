@@ -1,6 +1,6 @@
-2026/05/31-22:15:51.961 87e8 Reusing MANIFEST C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Session Storage/MANIFEST-000001
-2026/05/31-22:15:51.964 87e8 Recovering log #10
-2026/05/31-22:15:51.980 87e8 Reusing old log C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Session Storage/000010.log 
-2026/05/31-22:35:22.226 60b0 Level-0 table #14: started
-2026/05/31-22:35:22.246 60b0 Level-0 table #14: 32283 bytes OK
-2026/05/31-22:35:22.251 60b0 Delete type=0 #10
+2026/06/01-01:44:59.513 83b4 Reusing MANIFEST C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Session Storage/MANIFEST-000001
+2026/06/01-01:44:59.519 83b4 Recovering log #13
+2026/06/01-01:44:59.544 83b4 Reusing old log C:\Users\rassr\OneDrive\Desktop\linkedin-scraper\linkedin_profile\Default\Session Storage/000013.log 
+2026/06/01-01:56:20.281 8228 Level-0 table #17: started
+2026/06/01-01:56:20.298 8228 Level-0 table #17: 32709 bytes OK
+2026/06/01-01:56:20.303 8228 Delete type=0 #13

@@ -60,7 +60,7 @@ class AboutScraper:
             # Industry, company size
             industry     = extract(r"Industry\s*\n(.+?)(?:\n|$)")
             company_size = extract(r"Company size\s*\n(.+?)(?:\n|$)")
-            assoc_members = extract(r"([\d,]+)\s+associated members")
+            assoc_members = extract(r"([\d,]+)\s+associated members?")
 
             # ── FIXED: headquarters, founded, specialties ──
             headquarters = "N/A"

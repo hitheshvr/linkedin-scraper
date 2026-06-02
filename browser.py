@@ -15,7 +15,7 @@ class Browser:
         self.pw = sync_playwright().start()
         self.context = self.pw.chromium.launch_persistent_context(
             user_data_dir = "linkedin_profile",
-            headless      = False,
+            headless      = True,
             viewport      = {"width": 1440, "height": 900},
             args          = ["--disable-blink-features=AutomationControlled"],
         )
